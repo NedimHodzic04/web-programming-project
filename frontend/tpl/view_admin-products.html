@@ -1,0 +1,89 @@
+<section class="d-flex-column">
+    <!-- Sidebar -->
+    <div class="d-flex flex-column flex-shrink-0 bg-dark text-white p-3" id="sidebar">
+        <ul class="nav nav-pills flex-column"  style="width: 150px">
+            <li class="nav-item"><a href="#view_admin" class="nav-link text-white">Dashboard</a></li>
+            <li class="nav-item"><a href="#view_admin-orders" class="nav-link text-white">Orders</a></li>
+            <li class="nav-item"><a href="#view_admin-products" class="nav-link text-white active" aria-current="true">Products</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-grow-1 p-3">
+        <!-- Manage Products -->
+        <div id="products" class="mb-5 px-2 py-3 px-md-5">
+            <!-- Button to Add New Product -->
+            <div class="mb-5 d-flex justify-content-between">
+                <h4 class="fw-bolder">Products</h4>
+                <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#addProductModal">Add New Product</button>
+            </div>
+
+            <!-- Products Table -->
+            <div class="table-responsive">
+                <table id="productsTable" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">Product ID</th>
+                            <th scope="col">Product Name</th>
+                            <th scope="col">Price</th>
+                            <th scope="col">Stock Quantity</th>
+                            <th scope="col">Category</th>
+                            <th scope="col">Image</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="adminProductsTB">
+                        
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Add Product Modal -->
+        <div class="modal fade" id="addProductModal" tabindex="-1" aria-labelledby="addProductModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="addProductModalLabel">Add New Product</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <form method="post" action="">
+                            <!-- Form fields for Product -->
+                            <div class="mb-3">
+                                <label for="productNameInput" class="form-label">Product Name</label>
+                                <input type="text" class="form-control" id="productNameInput">
+                              </div>
+                            <div class="mb-3">
+                                <label for="priceInput" class="form-label">Price</label>
+                                <input type="number" class="form-control" id="priceInput">
+                              </div>
+                            <div class="mb-3">
+                                <label for="stockQuantityInput" class="form-label">Stock Quantity</label>
+                                <input type="number" class="form-control" id="stockQuantityInput">
+                              </div>
+                            <div class="mb-3">
+                                <label for="categoryInput" class="form-label">Category</label>
+                                <select class="form-select" aria-label="Category Selection" id="selectionInput">
+                                    <option selected>Select Category</option>
+                                    <option value="Rims">Rims</option>
+                                    <option value="ExhaustSystems">Exhaust Systems</option>
+                                    <option value="SteeringWheels">Steering Wheels</option>
+                                    <option value="Seats">Seats</option>
+                                  </select>
+                              </div>
+                              <div class="mb-3">
+                                <label for="formFile" class="form-label">Upload Image</label>
+                                <input class="form-control" type="file" id="formFile">
+                              </div>
+                              <input type="submit" class="btn btn-primary" id="saveProductBtn">
+                        </form>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>

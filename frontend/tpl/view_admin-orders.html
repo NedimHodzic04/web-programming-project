@@ -1,0 +1,97 @@
+<section class="d-flex-column">
+    <!-- Sidebar -->
+    <div class="d-flex flex-column flex-shrink-0 bg-dark text-white p-3"  id="sidebar">
+        <ul class="nav nav-pills flex-column w-2" style="width: 150px">
+            <li class="nav-item"><a href="#view_admin" class="nav-link text-white">Dashboard</a></li>
+            <li class="nav-item"><a href="#view_admin-orders" class="nav-link text-white active" aria-current="true">Orders</a></li>
+            <li class="nav-item"><a href="#view_admin-products" class="nav-link text-white">Products</a></li>
+        </ul>
+    </div>
+
+    <!-- Main Content -->
+    <div class="flex-grow-1 p-3">
+        <!-- Orders Section -->
+        <div id="orders" class="mb-5 px-2 py-3 px-md-5">
+            <!-- Button to Add New Order -->
+            <div class="mb-5 d-flex justify-content-between">
+                <h4 class="fw-bolder">Manage Orders</h4>
+            </div>
+
+            <!-- Orders Table -->
+            <div class="table-responsive">
+                <table id="ordersTable" class="table table-striped">
+                    <thead>
+                        <tr>
+                            <th scope="col">Order ID</th>
+                            <th scope="col">Customer Name</th>
+                            <th scope="col">Order Date</th>
+                            <th scope="col">Total Price</th>
+                            <th scope="col">Status</th>
+                            <th scope="col">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td>ORD001</td>
+                            <td>John Doe</td>
+                            <td>2025-03-10</td>
+                            <td>$1000.00</td>
+                            <td><span class="badge bg-success">Completed</span></td>
+                            <td>
+                                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#viewOrderModal">View</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>ORD002</td>
+                            <td>Jane Smith</td>
+                            <td>2025-03-12</td>
+                            <td>$250.00</td>
+                            <td><span class="badge bg-warning">Pending</span></td>
+                            <td>
+                                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#viewOrderModal">View</button>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td>ORD003</td>
+                            <td>Alan Brown</td>
+                            <td>2025-03-15</td>
+                            <td>$500.00</td>
+                            <td><span class="badge bg-danger">Cancelled</span></td>
+                            <td>
+                                <button class="btn btn-primary btn-sm" data-bs-toggle="modal" data-bs-target="#viewOrderModal">View</button>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- View Order Modal -->
+        <div class="modal fade" id="viewOrderModal" tabindex="-1" aria-labelledby="viewOrderModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="viewOrderModalLabel">Order Details</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p><strong>Order ID:</strong> ORD001</p>
+                        <p><strong>Customer Name:</strong> John Doe</p>
+                        <p><strong>Order Date:</strong> 2025-03-10</p>
+                        <p><strong>Total Price:</strong> $1000.00</p>
+                        <p><strong>Shipping Address:</strong> 123 Main St, City, Country</p>
+                        <p><strong>Order Status:</strong> Completed</p>
+                        <p><strong>Ordered Items:</strong></p>
+                        <ul>
+                            <li>BBS LM Rims - 2 x $500</li>
+                            <li>BMW M3 Exhaust - 1 x $300</li>
+                        </ul>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
