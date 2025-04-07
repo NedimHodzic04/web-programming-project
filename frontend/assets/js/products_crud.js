@@ -1,5 +1,5 @@
 document.addEventListener("DOMContentLoaded", function () {
-    const saveProductBtn = document.querySelector("#saveProductBtn");
+   /*  const saveProductBtn = document.querySelector("#saveProductBtn");
     const productForm = document.querySelector("#addProductModal form");
     const productsTable = document.querySelector("#adminProductsTB");
     let editIndex = null;
@@ -83,5 +83,5 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    loadProducts(); // Load products on page load
+    loadProducts(); // Load products on page load */
 });
