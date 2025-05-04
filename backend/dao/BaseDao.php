@@ -27,12 +27,26 @@ class BaseDao {
        return $stmt->fetch();
    }
 
+   public function getByEmail($email){
+    $stmt = $this->connection->prepare("SELECT * FROM ". $this->table . " WHERE email = :email");
+    $stmt->bindParam(":email", $email);
+    $stmt->execute();
+    return $stmt->fetch();
+   }
+
+   public function getByName($name){
+    $stmt = $this->connection->prepare("SELECT * FROM ". $this->table . " WHERE name = :name");
+    $stmt->bindParam(":name", $name);
+    $stmt->execute();
+    return $stmt->fetch();
+   }
 
    public function insert($data) {
        $columns = implode(", ", array_keys($data));
        $placeholders = ":" . implode(", :", array_keys($data));
        $sql = "INSERT INTO " . $this->table . " ($columns) VALUES ($placeholders)";
        $stmt = $this->connection->prepare($sql);
+       var_dump($sql);
        return $stmt->execute($data);
    }
 
