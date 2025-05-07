@@ -6,6 +6,7 @@ class CartDao extends BaseDao {
         parent::__construct("carts");
     }
 
+    // Create a new cart for a user
     public function createCart($user_id) {
         $stmt = $this->connection->prepare("
             INSERT INTO carts (user_id) VALUES (:user_id)
@@ -14,6 +15,7 @@ class CartDao extends BaseDao {
         return $this->connection->lastInsertId();
     }
 
+    // Get the cart for a user
     public function getCartByUser($user_id) {
         $stmt = $this->connection->prepare("
             SELECT * FROM carts WHERE user_id = :user_id

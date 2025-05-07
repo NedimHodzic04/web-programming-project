@@ -1,5 +1,5 @@
 <?php
-require_once 'BaseDao.php';
+require_once '../dao/BaseDao.php';
 class BaseService {
    protected $dao;
    public function __construct(BaseDao $dao) {
@@ -10,6 +10,12 @@ class BaseService {
    }
    public function getById($id) {
        return $this->dao->getById($id);
+   }
+   public function getByEmail($email){
+    return $this->dao->getByEmail($email);
+   }
+   public function getByName($name){
+    return $this->dao->getByName($name);
    }
    public function create($data) {
        return $this->dao->insert($data);
