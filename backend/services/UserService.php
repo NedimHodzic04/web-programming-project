@@ -1,5 +1,6 @@
 <?php
-require_once __DIR__ . '/../dao/UserDao.php';
+require_once __DIR__ . '/../dao/UserDao.php'; // Ensure path is correct
+require_once __DIR__ . '/../dao/config.php'; // For roles if needed here
 
 class UserService {
     private $dao;
@@ -8,53 +9,89 @@ class UserService {
         $this->dao = new UserDao();
     }
 
-    public function register($userData) {
-        // Check if user already exists
-        if ($this->dao->getUserByEmail($userData['email'])) {
-            throw new Exception("User already registered with this email!");
-        }
-
-        // Basic input validation (example: required fields)
-        $requiredFields = ['first_name', 'last_name', 'email', 'password', 'city', 'address', 'zip'];
-        foreach ($requiredFields as $field) {
-            if (empty($userData[$field])) {
-                throw new Exception("Missing required field: $field");
-            }
-        }
-
-        // Register new user
-        $this->dao->register($userData);
-        return "User successfully registered.";
-    }
-
-    public function login($email, $password) {
-        $user = $this->dao->getUserByEmail($email);
-
-        if (!$user || !password_verify($password, $user['password'])) {
-            throw new Exception("Invalid email or password!");
-        }
-
-        return $user;
-    }
+    // Removed the register method here, as it's handled by AuthService
+    // The register method in AuthService should call UserDao's register
+    
+    // Removed the login method here, as it's handled by AuthService
 
     public function getUserByEmail($email) {
-        $user = $this->dao->getUserByEmail($email);
-
-        if (!$user) {
-            throw new Exception("User not found with email: $email");
+        try {
+            $user = $this->dao->getUserByEmail($email);
+            if (!$user) {
+                throw new Exception("User not found with email: $email", 404);
+            }
+            return $user;
+        } catch (Exception $e) {
+            throw new Exception("Failed to retrieve user by email: " . $e->getMessage(), $e->getCode());
         }
+    }
 
-        return $user;
+    public function getUserById($id) { // Added this as you might need to fetch by ID
+        try {
+            $user = $this->dao->getById($id);
+            if (!$user) {
+                throw new Exception("User not found with ID: $id", 404);
+            }
+            return $user;
+        } catch (Exception $e) {
+            throw new Exception("Failed to retrieve user by ID: " . $e->getMessage(), $e->getCode());
+        }
+    }
+
+    public function getAllUsers() { // Added this for admin functionality
+        try {
+            return $this->dao->getAll();
+        } catch (Exception $e) {
+            throw new Exception("Failed to retrieve all users: " . $e->getMessage(), $e->getCode());
+        }
     }
 
     public function updateUser($id, $userData) {
-        // Optional: Validate if user exists before update
-        $existingUser = $this->dao->getUserByEmail($userData['email']);
-        if (!$existingUser || $existingUser['id'] != $id) {
-            throw new Exception("User not found or mismatch.");
+        // You might want to get the existing user first to validate ownership or admin rights
+        $existingUser = $this->dao->getById($id);
+        if (!$existingUser) {
+            throw new Exception("User not found for update.", 404);
         }
 
-        return $this->dao->updateUser($id, $userData);
+        // Ensure email isn't changed to an already existing email (if email is part of update)
+        if (isset($userData['email']) && $userData['email'] !== $existingUser['email']) {
+            if ($this->dao->getUserByEmail($userData['email'])) {
+                throw new Exception("Email already taken by another user.", 409);
+            }
+        }
+
+        try {
+            return $this->dao->update($id, $userData);
+        } catch (Exception $e) {
+            throw new Exception("Failed to update user: " . $e->getMessage(), $e->getCode());
+        }
+    }
+
+    public function deleteUser($id) { // Added for admin functionality
+        try {
+            $existingUser = $this->dao->getById($id);
+            if (!$existingUser) {
+                throw new Exception("User not found for deletion.", 404);
+            }
+            return $this->dao->delete($id);
+        } catch (Exception $e) {
+            throw new Exception("Failed to delete user: " . $e->getMessage(), $e->getCode());
+        }
+    }
+
+    public function updateRole($userId, $newRole) { // For admin only to update user roles
+        try {
+            $user = $this->dao->getById($userId);
+            if (!$user) {
+                throw new Exception("User not found.", 404);
+            }
+            // Basic validation for newRole (e.g., check if it's a valid role string)
+            if (!in_array($newRole, [Config::USER_ROLE(), Config::ADMIN_ROLE()])) { // Use your Config roles
+                throw new Exception("Invalid role specified.", 400);
+            }
+            return $this->dao->updateRole($userId, $newRole); // This calls the new method in UserDao
+        } catch (Exception $e) {
+            throw new Exception("Failed to update user role: " . $e->getMessage(), $e->getCode());
+        }
     }
 }
-?>
