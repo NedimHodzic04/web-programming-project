@@ -11,7 +11,7 @@
  * path="/api/payments",
  * summary="Process a payment for an order",
  * tags={"Payments"},
- * security={{"BearerAuth":{}}},
+ * security={{"ApiKey":{}}},
  * @OA\RequestBody(
  * required=true,
  * @OA\JsonContent(
@@ -76,7 +76,7 @@ Flight::route('POST /api/payments', function() {
  * path="/api/payments/order/{order_id}",
  * summary="Get payments for a specific order",
  * tags={"Payments"},
- * security={{"BearerAuth":{}}},
+ * security={{"ApiKey":{}}},
  * @OA\Parameter(
  * name="order_id",
  * in="path",

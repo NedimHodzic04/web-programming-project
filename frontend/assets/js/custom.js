@@ -16,7 +16,6 @@ $(document).ready(function() {
     onCreate: function() { $("#view_3").append("I'm the third view"); }
   });
 
-  UserService.init();
 
   // run app
   app.run();

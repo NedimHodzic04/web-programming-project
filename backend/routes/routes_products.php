@@ -77,7 +77,7 @@ Flight::route('GET /api/products/category/@category_id', function($category_id) 
  * path="/api/products",
  * summary="Add a new product",
  * tags={"Products"},
- * security={{"BearerAuth":{}}},
+ * security={{"ApiKey":{}}},
  * @OA\RequestBody(
  * required=true,
  * @OA\JsonContent(
@@ -117,7 +117,7 @@ Flight::route('POST /api/products', function() {
  * path="/api/products/{id}",
  * summary="Update a product",
  * tags={"Products"},
- * security={{"BearerAuth":{}}},
+ * security={{"ApiKey":{}}},
  * @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
  * @OA\RequestBody(
  * required=true,
@@ -158,7 +158,7 @@ Flight::route('PUT /api/products/@id', function($id) {
  * path="/api/products/{id}/stock",
  * summary="Update product stock",
  * tags={"Products"},
- * security={{"BearerAuth":{}}},
+ * security={{"ApiKey":{}}},
  * @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
  * @OA\RequestBody(
  * required=true,
@@ -195,7 +195,7 @@ Flight::route('PATCH /api/products/@id/stock', function($id) {
  * path="/api/products/{id}",
  * summary="Delete a product",
  * tags={"Products"},
- * security={{"BearerAuth":{}}},
+ * security={{"ApiKey":{}}},
  * @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
  * @OA\Response(response=200, description="Product deleted"),
  * @OA\Response(response=400, description="Delete failed"),

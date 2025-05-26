@@ -11,7 +11,7 @@
  * path="/api/order-products/{order_id}",
  * summary="Get products in a specific order",
  * tags={"Order Products"},
- * security={{"BearerAuth":{}}},
+ * security={{"ApiKey":{}}},
  * @OA\Parameter(
  * name="order_id",
  * in="path",
@@ -80,7 +80,7 @@ Flight::route('GET /api/order-products/@order_id', function($order_id) {
  * path="/api/order-products/{order_id}",
  * summary="Add products to an order",
  * tags={"Order Products"},
- * security={{"BearerAuth":{}}},
+ * security={{"ApiKey":{}}},
  * @OA\Parameter(
  * name="order_id",
  * in="path",

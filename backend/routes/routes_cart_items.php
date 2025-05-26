@@ -65,7 +65,7 @@ Flight::route('GET /api/cart-items/@cart_id', function($cart_id) {
  * path="/api/cart-items",
  * summary="Add item to cart (or update quantity if it exists)",
  * tags={"Cart Items"},
- * security={{"BearerAuth":{}}},
+ * security={{"ApiKey":{}}},
  * @OA\RequestBody(
  * required=true,
  * @OA\JsonContent(
@@ -141,7 +141,7 @@ Flight::route('POST /api/cart-items', function() {
  * path="/api/cart-items/{cart_id}/{product_id}",
  * summary="Update cart item quantity",
  * tags={"Cart Items"},
- * security={{"BearerAuth":{}}},
+ * security={{"ApiKey":{}}},
  * @OA\Parameter(
  * name="cart_id",
  * in="path",
@@ -223,7 +223,7 @@ Flight::route('PUT /api/cart-items/@cart_id/@product_id', function($cart_id, $pr
  * path="/api/cart-items/{cart_id}/{product_id}",
  * summary="Remove item from cart",
  * tags={"Cart Items"},
- * security={{"BearerAuth":{}}},
+ * security={{"ApiKey":{}}},
  * @OA\Parameter(
  * name="cart_id",
  * in="path",
@@ -292,7 +292,7 @@ Flight::route('DELETE /api/cart-items/@cart_id/@product_id', function($cart_id, 
  * path="/api/cart-items/clear/{cart_id}",
  * summary="Clear all items from cart",
  * tags={"Cart Items"},
- * security={{"BearerAuth":{}}},
+ * security={{"ApiKey":{}}},
  * @OA\Parameter(
  * name="cart_id",
  * in="path",

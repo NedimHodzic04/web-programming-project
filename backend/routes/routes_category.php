@@ -47,7 +47,7 @@ Flight::route('GET /api/categories', function() {
  * path="/api/categories",
  * summary="Add a new category",
  * tags={"Categories"},
- * security={{"BearerAuth":{}}},
+ * security={{"ApiKey":{}}},
  * @OA\RequestBody(
  * required=true,
  * @OA\JsonContent(

@@ -10,7 +10,7 @@
  * path="/api/orders",
  * summary="Create a new order",
  * tags={"Orders"},
- * security={{"BearerAuth":{}}},
+ * security={{"ApiKey":{}}},
  * @OA\RequestBody(
  * required=true,
  * @OA\JsonContent(
@@ -89,7 +89,7 @@ Flight::route('POST /api/orders', function() {
  * path="/api/orders/user/{user_id}",
  * summary="Get all orders for a user",
  * tags={"Orders"},
- * security={{"BearerAuth":{}}},
+ * security={{"ApiKey":{}}},
  * @OA\Parameter(
  * name="user_id",
  * in="path",
@@ -155,7 +155,7 @@ Flight::route('GET /api/orders/user/@user_id', function($user_id) {
  * path="/api/orders",
  * summary="Get all orders (Admin only)",
  * tags={"Orders"},
- * security={{"BearerAuth":{}}},
+ * security={{"ApiKey":{}}},
  * @OA\Response(
  * response=200,
  * description="List of all orders",
@@ -195,7 +195,7 @@ Flight::route('GET /api/orders', function() {
  * path="/api/orders/{id}",
  * summary="Get a single order by ID",
  * tags={"Orders"},
- * security={{"BearerAuth":{}}},
+ * security={{"ApiKey":{}}},
  * @OA\Parameter(
  * name="id",
  * in="path",
@@ -251,7 +251,7 @@ Flight::route('GET /api/orders/@id', function($id) {
  * path="/api/orders/{id}",
  * summary="Delete an order (Admin only)",
  * tags={"Orders"},
- * security={{"BearerAuth":{}}},
+ * security={{"ApiKey":{}}},
  * @OA\Parameter(
  * name="id",
  * in="path",
