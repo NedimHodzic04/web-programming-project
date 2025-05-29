@@ -46,7 +46,7 @@ class BaseDao {
        $placeholders = ":" . implode(", :", array_keys($data));
        $sql = "INSERT INTO " . $this->table . " ($columns) VALUES ($placeholders)";
        $stmt = $this->connection->prepare($sql);
-       var_dump($sql);
+       // var_dump($sql);
        return $stmt->execute($data);
    }
 
@@ -69,5 +69,11 @@ class BaseDao {
        $stmt->bindParam(':id', $id);
        return $stmt->execute();
    }
+
+   public function query_unique($sql, $params = []) {
+    $stmt = $this->connection->prepare($sql);
+    $stmt->execute($params);
+    return $stmt->fetch();
+}
 }
 ?>
