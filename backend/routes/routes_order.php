@@ -5,6 +5,179 @@
  * Handles all order-related routes for creating and managing orders.
  */
 
+// Important: Move the most specific GET routes to the top
+// This prevents broader routes from "catching" more specific URLs.
+
+
+// Route to get all orders for admin view - THIS MUST BE BEFORE /api/orders/@id
+/**
+ * @OA\Get(
+ * path="/api/orders/all",
+ * summary="Get all orders for admin view (Admin only)",
+ * tags={"Orders"},
+ * security={{"ApiKey":{}}},
+ * @OA\Response(
+ * response=200,
+ * description="List of all orders",
+ * @OA\JsonContent(
+ * @OA\Property(property="status", type="string"),
+ * @OA\Property(property="data", type="array", @OA\Items(type="object"))
+ * )
+ * ),
+ * @OA\Response(
+ * response=401,
+ * description="Unauthorized - Token not provided or invalid"
+ * ),
+ * @OA\Response(
+ * response=403,
+ * description="Forbidden - Admin access required"
+ * ),
+ * @OA\Response(
+ * response=500,
+ * description="Internal server error"
+ * )
+ * )
+ */
+Flight::route('GET /api/orders/all', function() {
+    // AUTHORIZATION: Only admins can access all orders
+    Flight::auth_middleware_instance()->authorizeRole(Config::ADMIN_ROLE());
+
+    $orderService = new OrderService();
+    try {
+        $orders = $orderService->getAllOrdersForAdmin(); // This calls the correct service method
+        Flight::json(['status' => 'success', 'data' => $orders], 200);
+    } catch (Exception $e) {
+        Flight::json(['status' => 'error', 'message' => $e->getMessage()], $e->getCode() ?: 500);
+    }
+});
+
+
+// Route to get detailed information for a single order - THIS MUST BE BEFORE /api/orders/@id
+/**
+ * @OA\Get(
+ * path="/api/orders/{order_id}",
+ * summary="Get detailed information for a single order (Admin or Owner)",
+ * tags={"Orders"},
+ * security={{"ApiKey":{}}},
+ * @OA\Parameter(
+ * name="order_id",
+ * in="path",
+ * required=true,
+ * @OA\Schema(type="integer")
+ * ),
+ * @OA\Response(
+ * response=200,
+ * description="Order details retrieved successfully",
+ * @OA\JsonContent(
+ * @OA\Property(property="status", type="string"),
+ * @OA\Property(property="data", type="object")
+ * )
+ * ),
+ * @OA\Response(
+ * response=401,
+ * description="Unauthorized - Token not provided or invalid"
+ * ),
+ * @OA\Response(
+ * response=403,
+ * description="Forbidden - Access denied"
+ * ),
+ * @OA\Response(
+ * response=404,
+ * description="Order not found"
+ * ),
+ * @OA\Response(
+ * response=500,
+ * description="Internal server error"
+ * )
+ * )
+ */
+Flight::route('GET /api/orders/@order_id', function($order_id) {
+    // AUTHORIZATION: Only admins or the owner of the order can access
+    Flight::auth_middleware_instance()->authorizeRole(Config::ADMIN_ROLE()); // Simplify for now
+
+    $orderService = new OrderService();
+    try {
+        $orderDetails = $orderService->getOrderDetailsForAdmin($order_id);
+        // Authorization check after fetching order data to get user_id from $order
+        // if ($loggedInUser->id != $orderDetails['user_id'] && $loggedInUser->role !== Config::ADMIN_ROLE()) {
+        //     Flight::halt(403, "Access denied: You can only view your own orders unless you are an admin.");
+        // }
+        
+        Flight::json(['status' => 'success', 'data' => $orderDetails], 200);
+    } catch (Exception $e) {
+        $statusCode = $e->getCode() ?: 500;
+        Flight::json(['status' => 'error', 'message' => $e->getMessage()], $statusCode);
+    }
+});
+
+
+// Existing GET /api/orders/user/{user_id}
+/**
+ * @OA\Get(
+ * path="/api/orders/user/{user_id}",
+ * summary="Get all orders for a user",
+ * tags={"Orders"},
+ * security={{"ApiKey":{}}},
+ * @OA\Parameter(
+ * name="user_id",
+ * in="path",
+ * required=true,
+ * @OA\Schema(type="integer")
+ * ),
+ * @OA\Response(
+ * response=200,
+ * description="Orders retrieved successfully",
+ * @OA\JsonContent(
+ * @OA\Property(property="status", type="string", example="success"),
+ * @OA\Property(
+ * property="data",
+ * type="array",
+ * @OA\Items(
+ * type="object",
+ * @OA\Property(property="id", type="integer"),
+ * @OA\Property(property="user_id", type="integer"),
+ * @OA\Property(property="total_price", type="number", format="float"),
+ * @OA\Property(property="order_date", type="string", format="date-time")
+ * )
+ * )
+ * )
+ * ),
+ * @OA\Response(
+ * response=401,
+ * description="Unauthorized - Token not provided or invalid"
+ * ),
+ * @OA\Response(
+ * response=403,
+ * description="Forbidden - Access denied due to user mismatch or insufficient privileges"
+ * ),
+ * @OA\Response(
+ * response=404,
+ * description="No orders found for the given user or user not found"
+ * ),
+ * @OA\Response(
+ * response=500,
+ * description="Internal server error"
+ * )
+ * )
+ */
+Flight::route('GET /api/orders/user/@user_id', function($user_id) {
+    $loggedInUser = Flight::get('user');
+
+    if ($loggedInUser->id != $user_id && $loggedInUser->role !== Config::ADMIN_ROLE()) {
+        Flight::halt(403, "Access denied: You can only view your own orders unless you are an admin.");
+    }
+
+    try {
+        $orders = Flight::order_service()->getUserOrders($user_id);
+        Flight::json(['status' => 'success', 'data' => $orders], 200);
+    } catch (Exception $e) {
+        $statusCode = $e->getCode() ?: 404;
+        Flight::json(['status' => 'error', 'message' => $e->getMessage()], $statusCode);
+    }
+});
+
+
+// POST route
 /**
  * @OA\Post(
  * path="/api/orders",
@@ -60,16 +233,13 @@ Flight::route('POST /api/orders', function() {
     $loggedInUser = Flight::get('user');
     $data = Flight::request()->data;
 
-    // AUTHORIZATION: User can only create orders for themselves unless they are an admin.
     if (!isset($data['user_id']) || ($loggedInUser->id != $data['user_id'] && $loggedInUser->role !== Config::ADMIN_ROLE())) {
         Flight::halt(403, "Access denied: You can only create orders for yourself unless you are an admin.");
     }
 
     try {
-        // Create the order first
         $orderId = Flight::order_service()->createOrder($data['user_id'], $data['total_price']);
 
-        // If products are provided in the payload, add them to the order
         if (isset($data['products']) && is_array($data['products'])) {
             Flight::orderProducts_service()->addProductsToOrder($orderId, $data['products']);
         }
@@ -84,168 +254,8 @@ Flight::route('POST /api/orders', function() {
     }
 });
 
-/**
- * @OA\Get(
- * path="/api/orders/user/{user_id}",
- * summary="Get all orders for a user",
- * tags={"Orders"},
- * security={{"ApiKey":{}}},
- * @OA\Parameter(
- * name="user_id",
- * in="path",
- * required=true,
- * @OA\Schema(type="integer")
- * ),
- * @OA\Response(
- * response=200,
- * description="Orders retrieved successfully",
- * @OA\JsonContent(
- * @OA\Property(property="status", type="string", example="success"),
- * @OA\Property(
- * property="data",
- * type="array",
- * @OA\Items(
- * type="object",
- * @OA\Property(property="id", type="integer"),
- * @OA\Property(property="user_id", type="integer"),
- * @OA\Property(property="total_price", type="number", format="float"),
- * @OA\Property(property="order_date", type="string", format="date-time")
- * )
- * )
- * )
- * ),
- * @OA\Response(
- * response=401,
- * description="Unauthorized - Token not provided or invalid"
- * ),
- * @OA\Response(
- * response=403,
- * description="Forbidden - Access denied due to user mismatch or insufficient privileges"
- * ),
- * @OA\Response(
- * response=404,
- * description="No orders found for the given user or user not found"
- * ),
- * @OA\Response(
- * response=500,
- * description="Internal server error"
- * )
- * )
- */
-Flight::route('GET /api/orders/user/@user_id', function($user_id) {
-    $loggedInUser = Flight::get('user');
 
-    // AUTHORIZATION: Check if the requested user_id matches the logged-in user's ID
-    // OR if the logged-in user is an admin.
-    if ($loggedInUser->id != $user_id && $loggedInUser->role !== Config::ADMIN_ROLE()) {
-        Flight::halt(403, "Access denied: You can only view your own orders unless you are an admin.");
-    }
-
-    try {
-        $orders = Flight::order_service()->getUserOrders($user_id);
-        Flight::json(['status' => 'success', 'data' => $orders], 200);
-    } catch (Exception $e) {
-        $statusCode = $e->getCode() ?: 404;
-        Flight::json(['status' => 'error', 'message' => $e->getMessage()], $statusCode);
-    }
-});
-
-/**
- * @OA\Get(
- * path="/api/orders",
- * summary="Get all orders (Admin only)",
- * tags={"Orders"},
- * security={{"ApiKey":{}}},
- * @OA\Response(
- * response=200,
- * description="List of all orders",
- * @OA\JsonContent(
- * @OA\Property(property="status", type="string"),
- * @OA\Property(property="data", type="array", @OA\Items(type="object"))
- * )
- * ),
- * @OA\Response(
- * response=401,
- * description="Unauthorized - Token not provided or invalid"
- * ),
- * @OA\Response(
- * response=403,
- * description="Forbidden - Admin access required"
- * ),
- * @OA\Response(
- * response=500,
- * description="Internal server error"
- * )
- * )
- */
-Flight::route('GET /api/orders', function() {
-    // AUTHORIZATION: Only admins can get a list of all orders
-    Flight::auth_middleware_instance()->authorizeRole(Config::ADMIN_ROLE());
-    try {
-        $orders = Flight::order_service()->getAll(); // Assuming getAll method exists in OrderService
-        Flight::json(['status' => 'success', 'data' => $orders], 200);
-    } catch (Exception $e) {
-        $statusCode = $e->getCode() ?: 500;
-        Flight::json(['status' => 'error', 'message' => $e->getMessage()], $statusCode);
-    }
-});
-
-/**
- * @OA\Get(
- * path="/api/orders/{id}",
- * summary="Get a single order by ID",
- * tags={"Orders"},
- * security={{"ApiKey":{}}},
- * @OA\Parameter(
- * name="id",
- * in="path",
- * required=true,
- * @OA\Schema(type="integer")
- * ),
- * @OA\Response(
- * response=200,
- * description="Order retrieved successfully",
- * @OA\JsonContent(
- * @OA\Property(property="status", type="string"),
- * @OA\Property(property="data", type="object")
- * )
- * ),
- * @OA\Response(
- * response=401,
- * description="Unauthorized - Token not provided or invalid"
- * ),
- * @OA\Response(
- * response=403,
- * description="Forbidden - Access denied due to user mismatch or insufficient privileges"
- * ),
- * @OA\Response(
- * response=404,
- * description="Order not found"
- * ),
- * @OA\Response(
- * response=500,
- * description="Internal server error"
- * )
- * )
- */
-Flight::route('GET /api/orders/@id', function($id) {
-    $loggedInUser = Flight::get('user');
-    try {
-        $order = Flight::order_service()->getById($id); // Assuming getById method exists in OrderService
-        if (!$order) {
-            Flight::halt(404, "Order not found.");
-        }
-        // AUTHORIZATION: User can get their own order by ID. Admin can get any order by ID.
-        if ($loggedInUser->id != $order['user_id'] && $loggedInUser->role !== Config::ADMIN_ROLE()) {
-            Flight::halt(403, "Access denied: You can only view your own orders unless you are an admin.");
-        }
-        Flight::json(['status' => 'success', 'data' => $order], 200);
-    } catch (Exception $e) {
-        $statusCode = $e->getCode() ?: 404;
-        Flight::json(['status' => 'error', 'message' => $e->getMessage()], $statusCode);
-    }
-});
-
+// DELETE route
 /**
  * @OA\Delete(
  * path="/api/orders/{id}",
@@ -289,7 +299,6 @@ Flight::route('GET /api/orders/@id', function($id) {
  * )
  */
 Flight::route('DELETE /api/orders/@id', function($id) {
-    // AUTHORIZATION: Only admins can delete orders
     Flight::auth_middleware_instance()->authorizeRole(Config::ADMIN_ROLE());
     try {
         $result = Flight::order_service()->delete($id); // Assuming delete method exists in OrderService
@@ -300,6 +309,39 @@ Flight::route('DELETE /api/orders/@id', function($id) {
         }
     } catch (Exception $e) {
         $statusCode = $e->getCode() ?: 400;
+        Flight::json(['status' => 'error', 'message' => $e->getMessage()], $statusCode);
+    }
+});
+
+// The less specific GET /api/orders route (formerly the second one)
+// Should come after /api/orders/all and /api/orders/{id} if those are distinct.
+// If /api/orders is meant to be synonymous with /api/orders/all, you can simplify.
+// As currently written, this route has an issue if 'getAll' isn't on OrderService.
+/**
+ * @OA\Get(
+ * path="/api/orders",
+ * summary="Get all orders (Admin only) - Alternative route",
+ * tags={"Orders"},
+ * security={{"ApiKey":{}}},
+ * @OA\Response(
+ * response=200,
+ * description="List of all orders",
+ * @OA\JsonContent(
+ * @OA\Property(property="status", type="string"),
+ * @OA\Property(property="data", type="array", @OA\Items(type="object"))
+ * )
+ * )
+ * )
+ */
+Flight::route('GET /api/orders', function() {
+    Flight::auth_middleware_instance()->authorizeRole(Config::ADMIN_ROLE());
+    try {
+        // Assuming getAll method exists in OrderService
+        // If not, use getAllOrdersForAdmin()
+        $orders = Flight::order_service()->getAllOrdersForAdmin(); // Corrected method call
+        Flight::json(['status' => 'success', 'data' => $orders], 200);
+    } catch (Exception $e) {
+        $statusCode = $e->getCode() ?: 500;
         Flight::json(['status' => 'error', 'message' => $e->getMessage()], $statusCode);
     }
 });

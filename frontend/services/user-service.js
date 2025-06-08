@@ -199,6 +199,28 @@ var UserService = {
         }
     },
 
+    handleExpiredSession: function () {
+        console.log("Session expired. Setting redirect flag and navigating.");
+        
+        localStorage.removeItem("user_token");
+        localStorage.removeItem("user_data");
+        
+        // SET A FLAG to tell the next page to show a message.
+        localStorage.setItem("session_expired_message", "true");
+        
+        // Redirect immediately. No setTimeout needed here anymore.
+        $.spapp.load({ route: '#view_1' });
+    },
+
+    handleAccessDenied: function() {
+        console.log("Access denied. Redirecting user.");
+        // We don't clear localStorage because the user is still logged in.
+        // We just set the message and redirect.
+        localStorage.setItem("redirect_message", "Access Denied: You do not have permission to view that page.");
+        localStorage.setItem("redirect_message_type", "error"); // We'll use this to show an error toast
+        $.spapp.load({ route: '#view_1' });
+    },
+
     updateUI: function() {
         const token = localStorage.getItem("user_token");
         const userData = localStorage.getItem("user_data");

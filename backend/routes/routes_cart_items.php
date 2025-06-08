@@ -106,7 +106,7 @@ Flight::route('POST /api/cart-items', function() {
     $data = Flight::request()->data;
 
     // Get the user's cart (or create if it doesn't exist)
-    $cart = Flight::cart_service()->getCartByUser($loggedInUser->id);
+    $cart = Flight::cart_service()->getCartById($loggedInUser->id);
     if (!$cart) {
         $cartId = Flight::cart_service()->createCart($loggedInUser->id);
         $cart = Flight::cart_service()->getCartById($cartId);
