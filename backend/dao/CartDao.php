@@ -16,7 +16,7 @@ class CartDao extends BaseDao {
     }
 
     // Get the cart for a user
-    public function getCartByUser($user_id) {
+    public function getCartById($user_id) {
         $stmt = $this->connection->prepare("
             SELECT * FROM carts WHERE user_id = :user_id
         ");

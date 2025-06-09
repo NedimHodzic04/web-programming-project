@@ -52,7 +52,7 @@
                    price: parseFloat($("#priceInput").val()),
                    stock_quantity: parseInt($("#stockQuantityInput").val()),
                    category_id: $("#selectionInput").val(), // This should be the ID of the category
-                   // description: $("#yourDescriptionFieldId").val(), // If you add a description field
+                   description: $("#descriptionInput").val(), // If you add a description field
                };
                console.log("AdminProductService: Product data collected from form:", productData); // Log: Data
 
@@ -197,6 +197,7 @@
                        $("#priceInput").val(product.price);
                        $("#stockQuantityInput").val(product.stock_quantity);
                        $("#selectionInput").val(product.category_id);
+                       $("#descriptionInput").val(product.description);
                    } else {
                         toastr.error("Could not fetch product details for editing.");
                    }

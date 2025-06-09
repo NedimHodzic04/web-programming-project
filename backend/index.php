@@ -21,6 +21,7 @@ require_once __DIR__ . '/services/OrderProductsService.php';
 require_once __DIR__ . '/services/CategoryService.php';
 require_once __DIR__ . '/services/ProductService.php';
 require_once __DIR__ . '/services/UserService.php';
+require_once __DIR__ . '/services/DashboardService.php';
 require_once __DIR__ . '/services/AuthService.php';
 require_once __DIR__ . '/middleware/AuthMiddleware.php';
 require_once __DIR__ . '/dao/config.php'; // Ensure Config is loaded before it's used
@@ -42,11 +43,12 @@ Flight::register('orderProducts_service', 'OrderProductsService');
 Flight::register('category_service', 'CategoryService');
 Flight::register('product_service', 'ProductService');
 Flight::register('user_service', 'UserService');
+Flight::register('dashboard_service', 'DashboardService');
 Flight::register('auth_service', 'AuthService');
 Flight::register('auth_middleware_instance', 'AuthMiddleware'); // Register an instance of AuthMiddleware
 
 // Custom error handling for JSON responses
-Flight::map('error', function(Exception $ex){
+Flight::map('error', function(Throwable $ex){
     // Log the error
     error_log($ex->getMessage());
 
@@ -62,49 +64,83 @@ Flight::map('error', function(Exception $ex){
     ], $code);
 });
 
-// Global authentication middleware using Flight::before
-Flight::before('start', function(){
-    $requestUri = Flight::request()->url;
-    $requestMethod = Flight::request()->method; // Get the request method
+// Global Authorization middleware using Flight::before
+// In your main index.php file
 
-    // Define public routes that do NOT require authentication
-    // Consider using a more robust regex or specific route mapping for public access
-    $publicRoutes = [
-        '/auth/login' => ['POST'],
-        '/auth/register' => ['POST'],
-        '/products' => ['GET'], // Allow public to view all products
-        '/products/' => ['GET'], // Allow public to view all products (trailing slash)
-        '/categories' => ['GET'], // Allow public to view all categories
-        '/categories/' => ['GET'], // Allow public to view all categories (trailing slash)
-        '/test' => ['GET'] // Your test route
+Flight::before('start', function(){
+    $request_path = Flight::request()->url;
+    $request_method = Flight::request()->method;
+
+    // Define specific routes that DO NOT require authentication (public routes)
+    // Use method + path combinations for precise control
+    $public_routes = [
+        // Auth routes
+        'POST /auth/login',
+        'POST /auth/register',
+        
+        // Public Product routes (READ-ONLY)
+        'GET /api/products',
+        'GET /api/products/search',
+        'GET /api/products/featured',
+        // Note: GET /api/products/{id} and GET /api/products/category/{category_id} 
+        // will need regex matching if you want them public
+        
+        // Public Category routes (READ-ONLY)
+        'GET /api/categories',
+        
+        // Test route
+        'GET /test'
     ];
 
-    // Check if the current request URI and method are in the public routes list
-    $isPublic = false;
-    foreach ($publicRoutes as $routePattern => $methods) {
-        // Use strpos for simple prefix matching or more complex regex if needed
-        if (strpos($requestUri, $routePattern) === 0 && in_array($requestMethod, $methods)) {
-            $isPublic = true;
-            break;
+    // Create current request signature
+    $current_request = $request_method . ' ' . $request_path;
+    
+    $is_public = false;
+    
+    // Check for exact matches first
+    if (in_array($current_request, $public_routes)) {
+        $is_public = true;
+    }
+    
+    // Check for pattern matches (for routes with parameters)
+    if (!$is_public) {
+        // Handle GET requests to /api/products/{id} pattern
+        if ($request_method === 'GET' && preg_match('#^/api/products/\d+$#', $request_path)) {
+            $is_public = true;
+        }
+        
+        // Handle GET requests to /api/products/category/{category_id} pattern  
+        if ($request_method === 'GET' && preg_match('#^/api/products/category/\d+$#', $request_path)) {
+            $is_public = true;
+        }
+        
+        // Handle GET requests to /api/products/search/{query} pattern
+        if ($request_method === 'GET' && preg_match('#^/api/products/search/.+$#', $request_path)) {
+            $is_public = true;
+        }
+        
+        // Handle GET requests to /api/products/featured/{limit} pattern
+        if ($request_method === 'GET' && preg_match('#^/api/products/featured/\d+$#', $request_path)) {
+            $is_public = true;
         }
     }
-
-    if ($isPublic) {
-        return; // Skip authentication for public routes
+    
+    if ($is_public) {
+        error_log("Skipping token verification for public route: " . $current_request);
+        return;
     }
 
-    // For all other routes, attempt to verify the token using the AuthMiddleware instance
-    $token = Flight::request()->getHeader("Authentication");
-
-    if ($token && strpos($token, 'Bearer ') === 0) {
-        $token = substr($token, 7); // Remove "Bearer " prefix
+    // For all protected routes, run authentication
+    error_log("Attempting token verification for protected route: " . $current_request);
+    try {
+        Flight::auth_middleware_instance()->verifyTokenFromHeaders();
+        error_log("Token verification SUCCESS for: " . $request_path);
+    } catch (Exception $e) {
+        error_log("Token verification FAILED for: " . $request_path . " - " . $e->getMessage());
+        // verifyTokenFromHeaders should handle the response and Flight::stop()
     }
-
-    // Use the registered AuthMiddleware instance to verify the token
-    Flight::auth_middleware_instance()->verifyToken($token);
-    // If verifyToken fails, it will call Flight::halt() and execution will stop.
-    // If it succeeds, Flight::set('user', ...) is called, and execution continues.
 });
+
 
 // Require the route files
 require __DIR__ . '/routes/routes_cart.php';
@@ -115,6 +151,7 @@ require __DIR__ . '/routes/routes_order.php';
 require __DIR__ . '/routes/routes_payment.php';
 require __DIR__ . '/routes/routes_products.php';
 require __DIR__ . '/routes/routes_users.php';
+require __DIR__ . '/routes/routes_dashboard.php';
 require __DIR__ . '/routes/AuthRoutes.php';
 
 // Add a simple test route to verify routing works

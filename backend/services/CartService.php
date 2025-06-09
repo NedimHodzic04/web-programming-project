@@ -13,8 +13,8 @@ class CartService {
     }
 
     // Get the cart for a user
-    public function getCartByUser($user_id) {
-        return $this->cartDao->getCartByUser($user_id);
+    public function getCartById($user_id) {
+        return $this->cartDao->getCartById($user_id);
     }
 }
 ?>

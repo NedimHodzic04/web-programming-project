@@ -6,6 +6,13 @@ class ProductDao extends BaseDao {
         parent::__construct("products");
     }
 
+    // NEW METHOD FOR DASHBOARD STATS
+    public function getProductCount() {
+        $stmt = $this->connection->query("SELECT COUNT(*) as count FROM products");
+        return $stmt->fetchColumn();
+    }
+
+
     /**
      * Add a new product to the database
      */
@@ -25,16 +32,23 @@ class ProductDao extends BaseDao {
     }
 
     /**
-     * Get product by ID
-     */
-    public function getProductById($id) {
-        $stmt = $this->connection->prepare("
-            SELECT * FROM products 
-            WHERE id = :id
-        ");
-        $stmt->execute([':id' => $id]);
-        return $stmt->fetch(PDO::FETCH_ASSOC);
-    }
+ * Get product by ID, including the category name.
+ */
+public function getProductById($id) {
+    $stmt = $this->connection->prepare("
+        SELECT
+            p.*,
+            c.name AS category_name
+        FROM
+            products p
+        JOIN
+            categories c ON p.category_id = c.id
+        WHERE
+            p.id = :id
+    ");
+    $stmt->execute([':id' => $id]);
+    return $stmt->fetch(PDO::FETCH_ASSOC);
+}
 
     /**
      * Get all products

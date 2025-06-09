@@ -94,27 +94,44 @@ Flight::route('POST /api/carts', function() {
  * )
  * )
  */
-Flight::route('GET /api/carts/user/@user_id', function($user_id) {
-    $loggedInUser = Flight::get('user');
+Flight::route('GET /api/cart-items/@cart_id', function($cart_id) {
+    error_log("Cart Items Route (DEBUG): Entering route handler for cart_id: " . $cart_id); // <-- NEW LOG
 
-    // AUTHORIZATION: Check if the requested user_id matches the logged-in user's ID
-    // OR if the logged-in user is an admin.
-    if ($loggedInUser->id != $user_id && $loggedInUser->role !== Config::ADMIN_ROLE()) {
-        Flight::halt(403, "Access denied: You can only view your own cart unless you are an admin.");
+    $loggedInUser = Flight::get('user');
+    error_log("Cart Items Route (DEBUG): LoggedInUser after Flight::get('user'): " . json_encode($loggedInUser)); // <-- NEW LOG
+
+    // Verify ownership of the cart
+    $cart = Flight::cart_service()->getCartById($cart_id);
+    error_log("Cart Items Route (DEBUG): Cart fetched by ID " . $cart_id . ": " . json_encode($cart)); // <-- NEW LOG
+
+    if (!$cart) {
+        error_log("Cart Items Route (DEBUG): Cart not found for ID: " . $cart_id . ". Halting 404.");
+        Flight::halt(404, "Cart not found.");
+    }
+    if ($loggedInUser->id != $cart['user_id'] && $loggedInUser->role !== Config::ADMIN_ROLE()) {
+        error_log("Cart Items Route (DEBUG): Access denied for user " . $loggedInUser->id . " on cart " . $cart_id . ". Halting 403.");
+        Flight::halt(403, "Access denied: You can only view items from your own cart unless you are an admin.");
     }
 
     try {
-        $cart = Flight::cart_service()->getCartByUser($user_id);
-        if (!$cart) {
-            // Return 200 with null data or an empty object if cart doesn't exist but user is authorized
-            // You might choose to auto-create here as well, depending on UX.
-            Flight::json(['status' => 'success', 'data' => null, 'message' => 'Cart not found for this user.'], 200);
-            return;
+        $items = Flight::cartItems_service()->getCartItems($cart_id); //
+        error_log("Cart Items Route (DEBUG): Items fetched from service for cart_id " . $cart_id . ": " . json_encode($items));
+
+        if (empty($items)) {
+            error_log("Cart Items Route (DEBUG): The \$items array is empty or null for cart_id " . $cart_id . ". Proceeding to send success with empty data.");
         }
-        Flight::json(['status' => 'success', 'data' => $cart], 200);
-    } catch (Exception $e) {
-        $statusCode = $e->getCode() ?: 404;
-        Flight::json(['status' => 'error', 'message' => $e->getMessage()], $statusCode);
+
+        Flight::json(['status' => 'success', 'data' => $items], 200);
+        error_log("Cart Items Route (DEBUG): Flight::json() called successfully."); // <-- NEW LOG
+
+    } catch (Throwable $e) {
+        error_log("Cart Items Route (ERROR): Exception/Error in fetching cart items: " . $e->getMessage() . " in " . $e->getFile() . " on line " . $e->getLine());
+        $statusCode = $e->getCode();
+        if (!is_int($statusCode) || $statusCode < 100 || $statusCode >= 600) {
+            $statusCode = 500;
+        }
+        Flight::json(['status' => 'error', 'message' => 'Backend error during cart item retrieval: ' . $e->getMessage()], $statusCode);
+        error_log("Cart Items Route (DEBUG): Error response sent."); // <-- NEW LOG
     }
 });
 

@@ -5,6 +5,7 @@
             <li class="nav-item"><a href="#view_admin" class="nav-link text-white">Dashboard</a></li>
             <li class="nav-item"><a href="#view_admin-orders" class="nav-link text-white">Orders</a></li>
             <li class="nav-item"><a href="#view_admin-products" class="nav-link text-white active" aria-current="true">Products</a></li>
+            <li class="nav-item"><a href="#view_admin-categories" class="nav-link text-white">Categories</a></li>
         </ul>
     </div>
 
@@ -55,6 +56,10 @@
                                 <input type="text" class="form-control" id="productNameInput">
                               </div>
                             <div class="mb-3">
+                                <label for="descriptionInput" class="form-label">Description</label>
+                                <textarea class="form-control" id="descriptionInput"></textarea>
+                              </div>
+                            <div class="mb-3">
                                 <label for="priceInput" class="form-label">Price</label>
                                 <input type="number" class="form-control" id="priceInput">
                               </div>
@@ -63,7 +68,7 @@
                                 <input type="number" class="form-control" id="stockQuantityInput">
                               </div>
                             <div class="mb-3">
-                                <label for="categoryInput" class="form-label">Category</label>
+                                <label for="selectionInput" class="form-label">Category</label>
                                 <select class="form-select" aria-label="Category Selection" id="selectionInput">
                                     <option selected>Select Category</option>
                                     <option value="Rims">Rims</option>
@@ -87,3 +92,8 @@
         </div>
     </div>
 </section>
+<script type="text/javascript">
+            $(document).ready(function() {
+                AdminProductService.init();
+            });
+        </script>

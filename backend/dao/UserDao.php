@@ -6,6 +6,12 @@ class UserDao extends BaseDao {
         parent::__construct("users");
     }
 
+    // NEW METHOD FOR DASHBOARD STATS
+    public function getUserCount() {
+        $stmt = $this->connection->query("SELECT COUNT(*) as count FROM users");
+        return $stmt->fetchColumn();
+    }
+
     public function register($userData) {
         // Add a 'role' field to your users table in the database!
         // Default to 'user' role for new registrations
